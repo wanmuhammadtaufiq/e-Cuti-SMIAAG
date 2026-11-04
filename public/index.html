@@ -468,10 +468,13 @@
     }
 
     // Baki = kelayakan setahun − cuti APPROVED yang bermula pada tahun semasa
-    function getKelayakan(nama) { const t = teachersData.find(x => x.NAMA_GURU === nama); return t ? (parseInt(t.BIL_CUTI_TAHUNAN_BERBAKI) || 0) : null; }
+    // Samakan ejaan nama (abaikan huruf besar/kecil & ruang berlebihan) supaya padanan antara akaun, DATA_GURU dan permohonan tak gagal
+    const normNama = v => String(v ?? '').replace(/\s+/g, ' ').trim().toUpperCase();
+    const samaNama = (a, b) => normNama(a) === normNama(b);
+    function getKelayakan(nama) { const t = teachersData.find(x => samaNama(x.NAMA_GURU, nama)); return t ? (parseInt(t.BIL_CUTI_TAHUNAN_BERBAKI) || 0) : null; }
     function getHariIkutStatus(nama, status) {
       const tahun = String(new Date().getFullYear());
-      return leaveApplications.filter(a => a.teacherName === nama && a.status === status && String(a.startDate).startsWith(tahun)).reduce((s, a) => s + (parseInt(a.totalDays) || 0), 0);
+      return leaveApplications.filter(a => samaNama(a.teacherName, nama) && a.status === status && String(a.startDate).startsWith(tahun)).reduce((s, a) => s + (parseInt(a.totalDays) || 0), 0);
     }
     function getBakiSemasa(nama) { return (getKelayakan(nama) || 0) - getHariIkutStatus(nama, 'APPROVED'); }
 
@@ -826,7 +829,7 @@
       const fil = leaveApplications.filter(a => {
         if (!isAdmin && (a.teacherEmail || '').toLowerCase() !== currentEmel.toLowerCase()) return false; // rekod sendiri sahaja
         if (st !== 'ALL' && a.status !== st) return false;
-        if (isAdmin && tc !== 'ALL' && a.teacherName !== tc) return false;
+        if (isAdmin && tc !== 'ALL' && !samaNama(a.teacherName, tc)) return false;
         return true;
       }).sort((a, b) => (a.appTs || 0) - (b.appTs || 0));
 
@@ -835,7 +838,7 @@
         ['nav-admin-badge', 'mob-nav-admin-badge'].forEach(id => document.getElementById(id)?.classList.toggle('hidden', !hasPending));
 
         if (tc !== 'ALL') {
-          const baki = getBakiSemasa(tc), totApp = leaveApplications.filter(x => x.teacherName === tc).length, totAppr = leaveApplications.filter(x => x.teacherName === tc && x.status === 'APPROVED').length;
+          const baki = getBakiSemasa(tc), totApp = leaveApplications.filter(x => samaNama(x.teacherName, tc)).length, totAppr = leaveApplications.filter(x => samaNama(x.teacherName, tc) && x.status === 'APPROVED').length;
           badgeBox.innerHTML = `<div><h4 class="font-bold text-sm text-indigo-900"><i class="fa-solid fa-filter text-indigo-400 mr-2"></i>Sejarah: ${escapeHTML(tc)}</h4><p class="text-[10px] text-indigo-700 mt-1">${totApp} Permohonan | ${totAppr} Lulus</p></div><div class="text-right"><span class="block text-[10px] text-indigo-400 font-bold">BAKI ${new Date().getFullYear()}</span><span class="text-xl font-black ${baki<=0?'text-rose-500':'text-indigo-600'}">${baki} Hari</span></div>`;
           badgeBox.classList.remove('hidden'); badgeBox.classList.add('flex');
         } else { badgeBox.classList.add('hidden'); badgeBox.classList.remove('flex'); }

@@ -355,6 +355,7 @@
 
     </section>
   </main>
+  <p id="versi-cap" class="text-center text-[10px] text-slate-400 pb-24 lg:pb-6">Web v2.1 · Server: menyemak...</p>
 
   <!-- BOTTOM NAVIGATION FOR MOBILE -->
   <nav class="lg:hidden fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-slate-200 z-50 flex justify-around items-center p-2 pb-safe shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
@@ -385,6 +386,7 @@
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyIQ15mj6bJN1dbQ2HyZ-L03GlGqjd-xvaVwfhPB5HUp8MmLzDZZE0vNMsV6jarca90ZQ/exec";
     // ====================================================================
 
+    const VERSI_WEB = "v2.1"; // tukar bila index.html dikemas kini
     const MAX_GURU_SEHARI = 3;
     const BULAN = ["Januari","Februari","Mac","April","Mei","Jun","Julai","Ogos","September","Oktober","November","Disember"];
 
@@ -458,6 +460,7 @@
       const [resApps, resUnlim] = await Promise.all([pApps, pUnlim]);
       if (resApps.success) { leaveApplications = resApps.data; quotaUsage = resApps.usage || {}; }
       if (resUnlim.success) { unlimitedDates = resUnlim.data; sabtuProgram = resUnlim.sabtu || []; }
+      const cap = document.getElementById('versi-cap'); if (cap) cap.innerText = `Web ${VERSI_WEB} · Server: ${resUnlim.success ? (resUnlim.versi ? 'v' + resUnlim.versi : 'LAMA (belum dideploy versi baharu)') : 'tiada sambungan'}`;
       renderCalendar();
       updateFormInfo();
     }
